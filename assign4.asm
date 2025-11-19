@@ -127,3 +127,13 @@ main_loop:
         // Quit if digit < 0
         cmp     w20, #0
         blt     main_end
+
+invalid_N:
+        ldr     x0, =msgInvalidN
+        bl      printf
+        b       main_end
+
+main_end:
+        ldp x29, x30, [sp], 16
+        mov w0, #0        // return 0
+        ret
