@@ -87,3 +87,43 @@ main:
         bl      scanf                       // scanf("%d", &N_value)
 
         ldr     w19, [N_value]              // Load N into w19 for convenience
+
+        // Validate N: must be between 1 and MAX_N
+        cmp     w19, #1
+        blt     invalid_N                   // if N < 1
+
+        cmp     w19, #MAX_N
+        bgt     invalid_N                   // if N > MAX_N
+
+        // Using srand to generate random nums
+        mov     x0, #0                      // time(NULL)
+        bl      time                        // x0 = time(NULL)
+        bl      srand                       // srand(time)
+
+        // Creating Grid
+        ldr     x0, =grid                   // x0 = &grid[0][0]
+        mov     w1, w19                     // w1 = N
+        bl      init_grid
+
+        // Printing Grid
+        ldr     x0, =grid
+        mov     w1, w19
+        bl      print_grid
+
+        //============================
+        // Loop to search for digits
+        //============================
+main_loop:
+        ldr     x0, =promptDigitSearch         // Ask user which bamboo type it wants
+        bl      printf
+
+        // read digit and assign to curr_digit_value
+        ldr     x0, =fmtInt
+        ldr     x1, =curr_digit_value
+        bl      scanf
+
+        ldr     w20, [curr_digit_value]        // w20 = digit
+
+        // Quit if digit < 0
+        cmp     w20, #0
+        blt     main_end
