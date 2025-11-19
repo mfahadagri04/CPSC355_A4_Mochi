@@ -75,7 +75,6 @@ curr_digit_value:                                   // stores current digit
         .balign 4
 
 main:
-
         stp     x29, x30, [sp, -16]!
         mov     x29, sp
 
@@ -95,11 +94,6 @@ main:
         cmp     w19, #MAX_N
         bgt     invalid_N                           // if N > MAX_N
 
-        invalid_N:
-        ldr     x0, =msgInvalidN
-        bl      printf
-        b       main_end
-
         // Using srand to generate random nums
         mov     x0, #0                              // time(NULL)
         bl      time                                // x0 = time(NULL)
@@ -114,6 +108,39 @@ main:
         ldr     x0, =grid
         mov     w1, w19
         bl      print_grid
+
+        // Branch to main loop for searching digits
+        b       main_loop
+
+invalid_N:
+        ldr     x0, =msgInvalidN
+        bl      printf
+        b       main_end
+
+//============================
+// Loop to search for digits
+//============================
+main_loop:
+        ldr     x0, =promptDigitSearch              // Ask user which bamboo type it wants
+        bl      printf
+
+        // read digit and assign to curr_digit_value
+        ldr     x0, =fmtInt
+        ldr     x1, =curr_digit_value
+        bl      scanf
+
+        ldr     w20, [curr_digit_value]             // w20 = digit
+
+        // Quit if digit < 0
+        cmp     w20, #0
+        blt     main_end
+
+        // Call search_and_store to find all occurrences
+        ldr     x0, =grid
+        mov     w1, w19                             // N
+        mov     w2, w20                             // digit to search
+        ldr     x3, =occurrences
+        bl      search_and_store
 
         mov     w21, w0                             // w21 = count
 
@@ -149,37 +176,12 @@ print_occ_loop:
         b       print_occ_loop
 
 print_occ_done:
-        b       main_loop                          // Branch for next value
+        b       main_loop                           // Branch for next value
 
-//============================
-// Loop to search for digits
-//============================
-main_loop:
-        ldr     x0, =promptDigitSearch              // Ask user which bamboo type it wants
-        bl      printf
-
-        // read digit and assign to curr_digit_value
-        ldr     x0, =fmtInt
-        ldr     x1, =curr_digit_value
-        bl      scanf
-
-        ldr     w20, [curr_digit_value]             // w20 = digit
-
-        // Quit if digit < 0
-        cmp     w20, #0
-        blt     main_end
-
-        ldr     x0, =grid
-        mov     w1, w19                             // N
-        mov     w2, w20                             // digit to search
-        ldr     x3, =occurrences
-        bl      search_and_store
-        
 // =======================================
 // Fills NxN grid with random digits 0–9
 // =======================================
 init_grid:
-        
         stp     x29, x30, [sp, -16]!
         mov     x29, sp
 
@@ -235,10 +237,10 @@ print_grid:
         mov     x29, sp
 
         // Save arguments
-        mov     x9, x0                             // x9 = base of grid
-        mov     w10, w1                            // w10 = N
+        mov     x9, x0                              // x9 = base of grid
+        mov     w10, w1                             // w10 = N
 
-        mov     w11, #0                            // row = 0
+        mov     w11, #0                             // row = 0
 
 print_row_loop:
         // if (row >= N) done
@@ -323,7 +325,6 @@ search_col_loop:
         add     x6, x12, x5                         // x6 = &occurrences[count]
 
         str     w14, [x6, #O_ROW]                   // Store row
-
         str     w15, [x6, #O_COL]                   // Store col
 
         add     w13, w13, #1                        // count++
@@ -337,12 +338,12 @@ next_search_row:
         b       search_row_loop
 
 search_done:
-        mov     w0, w13
+        mov     w0, w13                             // Return count in w0
 
         ldp     x29, x30, [sp], 16
-        ret                                         // Return count in w0
+        ret
 
 main_end:
-        ldp x29, x30, [sp], 16
-        mov w0, #0        // return 0
+        ldp     x29, x30, [sp], 16
+        mov     w0, #0                              // return 0
         ret
