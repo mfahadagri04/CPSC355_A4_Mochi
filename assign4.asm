@@ -137,3 +137,107 @@ main_end:
         ldp x29, x30, [sp], 16
         mov w0, #0        // return 0
         ret
+
+// =======================================
+// Fills NxN grid with random digits 0–9
+// =======================================
+init_grid:
+        
+        stp     x29, x30, [sp, -16]!
+        mov     x29, sp
+
+        // Save arguments into registers
+        mov     x9, x0                          // x9 = base address of grid
+        mov     w10, w1                         // w10 = N
+
+        mov     w11, #0                         // row = 0
+
+init_row_loop:
+        // if (row >= N) break;
+        cmp     w11, w10
+        b.ge    init_done
+
+        mov     w12, #0                         // col = 0
+
+init_col_loop:
+        // if (col >= N) go to next row
+        cmp     w12, w10
+        b.ge    init_next_row
+
+        // Generate random digit 0–9
+        bl      rand                            // w0 = rand()
+
+        mov     w1, #10                         // divisor = 10
+        udiv    w2, w0, w1                      // w2 = rand / 10
+        msub    w0, w2, w1, w0                  // w0 = rand - (w2*10) = rand % 10
+
+        // Compute &grid[row][col]
+        mul     w3, w11, w10                    // w3 = row * N
+        add     w3, w3, w12                     // w3 = row*N + col
+        lsl     x3, x3, #2                      // x3 = (row*N + col) * 4
+        add     x3, x9, x3                      // x3 = &grid[row][col]
+
+        str     w0, [x3]                        // grid[row][col] = digit
+
+        add     w12, w12, #1                    // col++
+        b       init_col_loop
+
+init_next_row:
+        add     w11, w11, #1                    // row++
+        b       init_row_loop
+
+init_done:
+        ldp     x29, x30, [sp], 16
+        ret
+
+// =============================
+// Prints N x N table of ints
+// =============================
+print_grid:
+        stp     x29, x30, [sp, -16]!
+        mov     x29, sp
+
+        // Save arguments
+        mov     x9, x0                             // x9 = base of grid
+        mov     w10, w1                            // w10 = N
+
+        mov     w11, #0                            // row = 0
+
+print_row_loop:
+        // if (row >= N) done
+        cmp     w11, w10
+        b.ge    print_done
+
+        mov     w12, #0                             // col = 0
+
+print_col_loop:
+        // if (col >= N) end of row
+        cmp     w12, w10
+        b.ge    print_row_end
+
+        // Load grid[row][col]
+        mul     w3, w11, w10                        // w3 = row * N
+        add     w3, w3, w12                         // w3 = row*N + col
+        lsl     x3, x3, #2                          // x3 = (row*N + col) * 4
+        add     x3, x9, x3                          // x3 = &grid[row][col]
+        ldr     w4, [x3]                            // w4 = grid[row][col]
+
+        // print the value
+        ldr     x0, =fmtElem                        // format "%d "
+        mov     w1, w4                              // value
+        bl      printf
+
+        add     w12, w12, #1                        // col++
+        b       print_col_loop
+
+print_row_end:
+        // End of row: print newline
+        ldr     x0, =fmtNL
+        bl      printf
+
+        add     w11, w11, #1                        // row++
+        b       print_row_loop
+
+print_done:
+        ldp     x29, x30, [sp], 16
+        ret
