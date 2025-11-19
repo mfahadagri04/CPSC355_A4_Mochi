@@ -95,6 +95,11 @@ main:
         cmp     w19, #MAX_N
         bgt     invalid_N                           // if N > MAX_N
 
+        invalid_N:
+        ldr     x0, =msgInvalidN
+        bl      printf
+        b       main_end
+
         // Using srand to generate random nums
         mov     x0, #0                              // time(NULL)
         bl      time                                // x0 = time(NULL)
@@ -110,9 +115,45 @@ main:
         mov     w1, w19
         bl      print_grid
 
-        //============================
-        // Loop to search for digits
-        //============================
+        mov     w21, w0                             // w21 = count
+
+        // Prints how many bamboo type is there
+        ldr     x0, =fmtCount                       // format string
+        mov     w1, w20                             // digit we searched for
+        mov     w2, w21                             // count
+        bl      printf
+
+        // Print each occurrence:
+        mov     w23, #0                             // idx = 0
+        ldr     x22, =occurrences                   // x22 = base of occurrences array
+
+print_occ_loop:
+        cmp     w23, w21                            // while (idx < count)
+        b.ge    print_occ_done
+
+        // Compute &occurrences[idx]
+        mov     w24, w23                            // w24 = idx
+        uxtw    x24, w24                            // zero-extend to 64-bit
+        lsl     x24, x24, #3                        // x24 = idx * O_SIZE (8 bytes)
+        add     x25, x22, x24                       // x25 = &occurrences[idx]
+
+        // Load row and col
+        ldr     w2, [x25, #O_ROW]                   // w2 = row
+        ldr     w3, [x25, #O_COL]                   // w3 = col
+
+        ldr     x0, =fmtOccurence
+        add     w1, w23, #1                         // w1 = idx + 1  (1-based index)
+        bl      printf
+
+        add     w23, w23, #1                        // idx++
+        b       print_occ_loop
+
+print_occ_done:
+        b       main_loop                          // Branch for next value
+
+//============================
+// Loop to search for digits
+//============================
 main_loop:
         ldr     x0, =promptDigitSearch              // Ask user which bamboo type it wants
         bl      printf
@@ -128,16 +169,12 @@ main_loop:
         cmp     w20, #0
         blt     main_end
 
-invalid_N:
-        ldr     x0, =msgInvalidN
-        bl      printf
-        b       main_end
-
-main_end:
-        ldp x29, x30, [sp], 16
-        mov w0, #0        // return 0
-        ret
-
+        ldr     x0, =grid
+        mov     w1, w19                             // N
+        mov     w2, w20                             // digit to search
+        ldr     x3, =occurrences
+        bl      search_and_store
+        
 // =======================================
 // Fills NxN grid with random digits 0–9
 // =======================================
@@ -304,3 +341,8 @@ search_done:
 
         ldp     x29, x30, [sp], 16
         ret                                         // Return count in w0
+
+main_end:
+        ldp x29, x30, [sp], 16
+        mov w0, #0        // return 0
+        ret
