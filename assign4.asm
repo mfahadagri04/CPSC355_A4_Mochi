@@ -67,3 +67,23 @@ N_value:        // stores chosen N
 
 curr_digit_value:    // stores current digit
         .word   0
+
+// ==============
+// Main Section
+// ==============
+        .text
+        .balign 4
+
+main:
+
+        stp     x29, x30, [sp, -16]!
+        mov     x29, sp
+
+        ldr     x0, =promptN
+        bl      printf                      // Print "Enter the size of the table: "
+
+        ldr     x0, =fmtInt                 // "%d"
+        ldr     x1, =N_value
+        bl      scanf                       // scanf("%d", &N_value)
+
+        ldr     w19, [N_value]              // Load N into w19 for convenience
