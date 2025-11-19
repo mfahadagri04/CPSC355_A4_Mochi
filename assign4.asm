@@ -20,3 +20,50 @@
 
         // Max number of occurrences
         .equ    MAX_OCC, MAX_N * MAX_N
+
+// ======
+// Data 
+// ======
+        .data
+
+promptN:
+        .string "Enter the size of the table: "
+
+promptDigitSearch:
+        .string "Enter a digit to search for (negative to quit): "
+
+fmtInt:
+        .string "%d"
+
+fmtElem:
+        .string "%d "
+
+fmtNL:
+        .string "\n"
+
+fmtCount:
+        .string "Digit %d occurrences: %d\n"
+
+fmtOccurence:
+        .string "%d. In (%d,%d)\n"
+
+msgInvalidN:
+        .string "Invalid table size. Exiting.\n"
+
+// ======
+// BSS 
+// ======
+        .bss
+        .align 4
+
+grid:           // 2D array
+        .skip   GRID_BYTES
+
+occurrences:    // array of Occurrence structs
+        .skip   MAX_OCC * O_SIZE
+
+N_value:        // stores chosen N
+        .word   0
+
+curr_digit_value:    // stores current digit
+        .word   0
